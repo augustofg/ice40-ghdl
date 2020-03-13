@@ -1,4 +1,12 @@
+.PHONY: all flash load
+
 all: blinkled.bin
+
+flash: blinkled.bin
+	iceprog $<
+
+load: blinkled.bin
+	iceprog -S $<
 
 blinkled.bin: blinkled.asc
 	icepack $< $@
@@ -11,3 +19,6 @@ blinkled.json: blinkled.o
 
 blinkled.o: src/blinkled.vhd
 	ghdl -a $<
+
+clean:
+	rm -f blinkled.o blinkled.json blinkled.asc blinkled.bin *.cf

@@ -10,13 +10,13 @@ entity blinkled is
 end blinkled;
 
 architecture leds_arch of blinkled is
-  signal clk_2hz: std_logic;
+  signal clk_2hz: std_logic := '0';
   signal leds_out: std_ulogic_vector (0 to 7) := "00000000";
 begin
   (led0, led1, led2, led3, led4, led5, led6, led7) <= leds_out;
 
   process(clk)
-    variable counter: unsigned (0 to 23);
+    variable counter: unsigned (0 to 23) := x"000000";
   begin
     if rising_edge(clk) then
       if counter = 5_999_999 then
@@ -29,7 +29,7 @@ begin
     end if;
   end process;
 
-  process(clk)
+  process(clk_2hz)
   begin
     if rising_edge(clk_2hz) then
       leds_out <= not leds_out;

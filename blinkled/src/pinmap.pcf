@@ -8,6 +8,3 @@ set_io --warn-no-port led5 C4
 set_io --warn-no-port led6 B3
 set_io --warn-no-port led7 C3
 set_io --warn-no-port clk J3
-# FTDI
-set_io --warn-no-port ftdi_tx B12
-set_io --warn-no-port ftdi_rx B10

@@ -30,11 +30,11 @@ begin
   (led0, led1, led2, led3, led4, led5, led6, led7) <= leds_out;
 
   process(clk)
-    variable counter: unsigned (0 to 23) := x"000000";
+    variable counter: integer range 0 to 12_000_000 := 0;
   begin
     if rising_edge(clk) then
       if counter = clk_div then
-        counter := x"000000";
+        counter := 0;
         leds_out <= not leds_out;
       else
         counter := counter + 1;

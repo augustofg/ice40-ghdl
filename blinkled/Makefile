@@ -6,7 +6,7 @@ TOP_LEVEL_FILE_SYNTH = $(SRC_DIR)/blinkled.vhd
 TOP_LEVEL_FILE_SIMU  = $(SRC_DIR)/blinkled_tb.vhd
 PINMAP_FILE          = $(SRC_DIR)/pinmap.pcf
 GHDL_FLAGS           = --std=08
-NEXTPNR_FLAGS        = --hx8k --package ct256
+NEXTPNR_FLAGS        = --hx8k --package ct256 --pre-pack $(SRC_DIR)/constraints.py
 
 .PHONY: all flash load simu
 

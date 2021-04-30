@@ -17,23 +17,24 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity blinkled is
-  generic (clk_div: integer := 5_999_999);
+  generic (g_clk_div: integer := 5_999_999);
   port (
-    clk: in std_logic;
-    led0, led1, led2, led3, led4, led5, led6, led7: out std_logic
+    clk_i: in std_logic;
+    led0_o, led1_o, led2_o, led3_o: out std_logic;
+    led4_o, led5_o, led6_o, led7_o: out std_logic
     );
 end blinkled;
 
 architecture leds_arch of blinkled is
   signal leds_out: std_ulogic_vector (0 to 7) := "00000000";
 begin
-  (led0, led1, led2, led3, led4, led5, led6, led7) <= leds_out;
+  (led0_o, led1_o, led2_o, led3_o, led4_o, led5_o, led6_o, led7_o) <= leds_out;
 
-  process(clk)
+  process(clk_i)
     variable counter: integer range 0 to 12_000_000 := 0;
   begin
-    if rising_edge(clk) then
-      if counter = clk_div then
+    if rising_edge(clk_i) then
+      if counter = g_clk_div then
         counter := 0;
         leds_out <= not leds_out;
       else

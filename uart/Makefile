@@ -6,7 +6,7 @@ TOP_LEVEL_FILE_SYNTH = $(SRC_DIR)/uart_demo.vhd
 TOP_LEVEL_FILE_SIMU  = $(SRC_DIR)/uart_tb.vhd
 PINMAP_FILE          = $(SRC_DIR)/pinmap.pcf
 GHDL_FLAGS           = --std=08
-NEXTPNR_FLAGS        = --hx8k --package ct256 --pre-pack $(SRC_DIR)/constraints.py
+NEXTPNR_FLAGS        = --hx8k --package ct256
 
 .PHONY: all flash load simu
 
@@ -21,8 +21,8 @@ load: $(TOP_LEVEL_ENT_SYNTH).bin
 $(TOP_LEVEL_ENT_SYNTH).bin: $(TOP_LEVEL_ENT_SYNTH).asc
 	icepack $< $@
 
-$(TOP_LEVEL_ENT_SYNTH).asc: $(SRC_DIR)/pinmap.pcf $(TOP_LEVEL_ENT_SYNTH).json
-	nextpnr-ice40 $(NEXTPNR_FLAGS) --pcf $< --asc $@ --json $(word 2,$^)
+$(TOP_LEVEL_ENT_SYNTH).asc: $(SRC_DIR)/pinmap.pcf $(TOP_LEVEL_ENT_SYNTH).json $(SRC_DIR)/constraints.py
+	nextpnr-ice40 $(NEXTPNR_FLAGS) --pcf $< --asc $@ --json $(word 2,$^)  --pre-pack $(word 3,$^)
 
 $(TOP_LEVEL_ENT_SYNTH).json: $(TOP_LEVEL_ENT_SYNTH).o uart.o
 	yosys -m ghdl -p 'ghdl $(GHDL_FLAGS) $(TOP_LEVEL_ENT_SYNTH); synth_ice40 -json $(@)'

@@ -30,15 +30,15 @@ begin
     -- simulation costs
     generic map(5999)
     port map(
-      clk => clk,
-      led0 => led0,
-      led1 => led1,
-      led2 => led2,
-      led3 => led3,
-      led4 => led4,
-      led5 => led5,
-      led6 => led6,
-      led7 => led7
+      clk_i => clk,
+      led0_o => led0,
+      led1_o => led1,
+      led2_o => led2,
+      led3_o => led3,
+      led4_o => led4,
+      led5_o => led5,
+      led6_o => led6,
+      led7_o => led7
       );
 
   process

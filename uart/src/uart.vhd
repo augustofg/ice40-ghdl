@@ -37,6 +37,9 @@ architecture uart_arch of uart is
   type rx_state_t is (idle, align_bit_sample, read_data_bits, wait_data_read);
   signal tx_state: tx_state_t := idle;
   signal rx_state: rx_state_t := idle;
+  signal rx_sync: std_logic := '0';
+  signal rx_now: std_logic := '0';
+  signal rx_prev: std_logic := '0';
 begin
 
   process(clk_i)
@@ -46,20 +49,23 @@ begin
     variable rx_cnt: unsigned (15 downto 0) := x"0000";
     variable rx_bit_cnt: integer range 0 to 8 := 0;
     variable rx_data_buf: std_logic_vector (7 downto 0);
-    variable rx_prev: std_logic := '0';
   begin
     if rising_edge(clk_i) then
       if rst_n_i = '0' then
         tx_state <= idle;
         tx_o <= '1';
         tx_cnt := x"0000";
-        rx_prev := '0';
+        rx_prev <= '0';
         rx_full_o <= '0';
       else
+        -- Synchronize rx_i with clk_i (clock domain crossing)
+        rx_sync <= rx_i;
+        rx_now <= rx_sync;
+        rx_prev <= rx_now;
         case rx_state is
           when idle =>
             -- Wait for the start bit
-            if rx_prev = '1' and rx_i =  '0' then
+            if rx_prev = '1' and rx_now =  '0' then
               rx_state <= align_bit_sample;
             end if;
 
@@ -67,7 +73,7 @@ begin
             -- Wait for a half bit time to align sampling to the middle of the
             -- next bit
             if rx_cnt = ('0' & clk_div_i(clk_div_i'high downto 1)) then
-              if rx_i = '1' then          -- If the start bit isn't '0' as
+              if rx_now = '1' then          -- If the start bit isn't '0' as
                 rx_state <= idle;         -- expected, go to idle
               else
                 rx_state <= read_data_bits;
@@ -82,7 +88,7 @@ begin
             if rx_cnt = clk_div_i then
               rx_cnt := x"0000";
               if rx_bit_cnt = 8 then
-                if rx_i = '1' then      -- Check if the stop bit is
+                if rx_now = '1' then      -- Check if the stop bit is
                   rx_full_o <= '1';     -- correct
                   rx_state <= wait_data_read;
                 else
@@ -92,7 +98,7 @@ begin
                 rx_data_o <= rx_data_buf;
               else
                 rx_bit_cnt := rx_bit_cnt + 1;
-                rx_data_buf := rx_i & rx_data_buf(7 downto 1);
+                rx_data_buf := rx_now & rx_data_buf(7 downto 1);
               end if;
             else
               rx_cnt := rx_cnt + 1;
@@ -148,7 +154,6 @@ begin
             end if;
         end case;
 
-        rx_prev := rx_i;
       end if;
     end if;
   end process;

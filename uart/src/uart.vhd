@@ -1,4 +1,15 @@
--- Copyright 2021 Augusto Fraga Giachero <afg@augustofg.net>
+-------------------------------------------------------------------------------
+-- Title      : Simple UART core
+-------------------------------------------------------------------------------
+-- Author     : Augusto Fraga Giachero
+-- Platform   : FPGA-generic
+-- Standard   : VHDL 93
+-------------------------------------------------------------------------------
+-- Description: Simple TX/RX UART core with a configurable baud-rate. Data
+--              is sampled at the middle of the bit. You should ensure that
+--              freq(clk_i) >> Baud rate for a reliable operation.
+-------------------------------------------------------------------------------
+-- Copyright 2021-2023 Augusto Fraga Giachero <afg@augustofg.net>
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
 -- you may not use this file except in compliance with the License.
@@ -18,15 +29,25 @@ use ieee.numeric_std.all;
 
 entity uart is
   port (
-    rst_n_i:         in  std_logic;
+    -- Core clock
     clk_i:           in  std_logic;
+    -- Core reset (active low)
+    rst_n_i:         in  std_logic;
+    -- Baud-rate divider: baud = freq(clk_i) / (clk_div_i + 1)
     clk_div_i:       in  unsigned (15 downto 0);
+    -- Byte to be transmitted
     tx_data_i:       in  std_logic_vector (7 downto 0);
+    -- Start data transmission
     tx_start_i:      in  std_logic;
+    -- Indicate if there is an ongoing trasmission
     tx_busy_o:       out std_logic := '1';
+    -- UART TX output
     tx_o:            out std_logic := '1';
+    -- Byte received
     rx_data_o:       out std_logic_vector (7 downto 0) := x"00";
+    -- Data valid pulse (indicates that a new byte was received)
     rx_data_valid_o: out std_logic;
+    -- UART RX input
     rx_i:            in  std_logic
     );
 end uart;

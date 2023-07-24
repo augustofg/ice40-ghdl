@@ -74,11 +74,10 @@ architecture uart_tb_arch of uart_tb is
   signal rst_n: std_logic := '0';
   signal tx_start: std_logic := '0';
   signal tx_data: std_logic_vector(7 downto 0) := (others => '0');
-  signal tx_ready: std_logic := '0';
+  signal tx_busy: std_logic := '0';
   signal tx: std_logic := '1';
   signal rx_data: std_logic_vector(7 downto 0);
-  signal rx_full: std_logic := '0';
-  signal rx_read: std_logic := '0';
+  signal rx_data_valid: std_logic := '0';
   signal rx: std_logic := '1';
 
   signal check_tx_data_done: boolean := false;
@@ -92,11 +91,10 @@ begin
       clk_div_i => x"0068",
       tx_data_i => tx_data,
       tx_start_i => tx_start,
-      tx_ready_o => tx_ready,
+      tx_busy_o => tx_busy,
       tx_o => tx,
       rx_data_o => rx_data,
-      rx_read_i => rx_read,
-      rx_full_o => rx_full,
+      rx_data_valid_o => rx_data_valid,
       rx_i => rx
       );
 
@@ -119,8 +117,8 @@ begin
       tx_start <= '1';
       f_wait_cycles(clk, 1);
       tx_start <= '0';
+      wait until tx_busy = '0';
       f_wait_cycles(clk, 1);
-      wait until tx_ready = '1';
     end loop;
 
     -- Wait for all process to finish
@@ -169,12 +167,9 @@ begin
   begin
     -- Validate the received bytes
     for byte in 255 downto 0 loop
-      wait until rx_full = '1';
+      wait until rx_data_valid = '1';
       assert rx_data = std_logic_vector(to_unsigned(byte, 8)) severity failure;
-      rx_read <= '1';
       f_wait_cycles(clk, 1);
-      rx_read <= '0';
-      f_wait_cycles(clk, 2);
     end loop;
     check_rx_data_done <= true;
   end process;

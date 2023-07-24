@@ -18,29 +18,30 @@ use ieee.numeric_std.all;
 
 entity uart is
   port (
-    rst_n_i:       in  std_logic;
-    clk_i:         in  std_logic;
-    clk_div_i:     in  unsigned (15 downto 0);
-    tx_data_i:     in  std_logic_vector (7 downto 0);
-    tx_start_i:    in  std_logic;
-    tx_ready_o:    out std_logic := '1';
-    tx_o:          out std_logic := '1';
-    rx_data_o:     out std_logic_vector (7 downto 0) := x"00";
-    rx_read_i:     in  std_logic;
-    rx_full_o:     out std_logic := '0';
-    rx_i:          in  std_logic
+    rst_n_i:         in  std_logic;
+    clk_i:           in  std_logic;
+    clk_div_i:       in  unsigned (15 downto 0);
+    tx_data_i:       in  std_logic_vector (7 downto 0);
+    tx_start_i:      in  std_logic;
+    tx_busy_o:       out std_logic := '1';
+    tx_o:            out std_logic := '1';
+    rx_data_o:       out std_logic_vector (7 downto 0) := x"00";
+    rx_data_valid_o: out std_logic;
+    rx_i:            in  std_logic
     );
 end uart;
 
 architecture uart_arch of uart is
   type tx_state_t is (idle, trans_sta_bit, trans_data_bits, trans_sto_bit);
-  type rx_state_t is (idle, align_bit_sample, read_data_bits, wait_data_read);
+  type rx_state_t is (idle, align_bit_sample, read_data_bits);
   signal tx_state: tx_state_t := idle;
   signal rx_state: rx_state_t := idle;
   signal rx_sync: std_logic := '0';
   signal rx_now: std_logic := '0';
   signal rx_prev: std_logic := '0';
 begin
+
+  tx_busy_o <= '1' when tx_state /= idle else tx_start_i;
 
   process(clk_i)
     variable tx_cnt: unsigned (15 downto 0) := x"0000";
@@ -56,12 +57,14 @@ begin
         tx_o <= '1';
         tx_cnt := x"0000";
         rx_prev <= '0';
-        rx_full_o <= '0';
+        rx_data_valid_o <= '0';
       else
         -- Synchronize rx_i with clk_i (clock domain crossing)
         rx_sync <= rx_i;
         rx_now <= rx_sync;
         rx_prev <= rx_now;
+        -- Set rx data valid back to '0'
+        rx_data_valid_o <= '0';
         case rx_state is
           when idle =>
             -- Wait for the start bit
@@ -74,7 +77,7 @@ begin
             -- next bit
             if rx_cnt = ('0' & clk_div_i(clk_div_i'high downto 1)) then
               if rx_now = '1' then          -- If the start bit isn't '0' as
-                rx_state <= idle;         -- expected, go to idle
+                rx_state <= idle;           -- expected, go to idle
               else
                 rx_state <= read_data_bits;
               end if;
@@ -88,12 +91,11 @@ begin
             if rx_cnt = clk_div_i then
               rx_cnt := x"0000";
               if rx_bit_cnt = 8 then
-                if rx_now = '1' then      -- Check if the stop bit is
-                  rx_full_o <= '1';     -- correct
-                  rx_state <= wait_data_read;
-                else
-                  rx_state <= idle;
+                -- Generate a valid pulse if the stop bit is correct
+                if rx_now = '1' then
+                  rx_data_valid_o <= '1';
                 end if;
+                rx_state <= idle;
                 rx_bit_cnt := 0;
                 rx_data_o <= rx_data_buf;
               else
@@ -103,12 +105,6 @@ begin
             else
               rx_cnt := rx_cnt + 1;
             end if;
-
-          when wait_data_read =>
-            if rx_read_i = '1' then
-              rx_full_o <= '0';
-              rx_state <= idle;
-            end if;
         end case;
 
         case tx_state is
@@ -116,7 +112,6 @@ begin
             if tx_start_i = '1' then
               tx_data_buf := tx_data_i;
               tx_state <= trans_sta_bit;
-              tx_ready_o <= '0';
             end if;
 
           when trans_sta_bit =>
@@ -147,7 +142,6 @@ begin
             tx_o <= '1';
             if tx_cnt = clk_div_i then
               tx_state <= idle;
-              tx_ready_o <= '1';
               tx_cnt := x"0000";
             else
               tx_cnt := tx_cnt + 1;

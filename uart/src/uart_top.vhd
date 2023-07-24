@@ -30,10 +30,9 @@ architecture uart_top_arch of uart_top is
   constant uart_div: unsigned (15 downto 0) := x"04E1";
   signal tx_buf: std_logic_vector (7 downto 0) := x"41";
   signal tx_start: std_logic := '0';
-  signal tx_ready: std_logic := '0';
+  signal tx_busy: std_logic := '0';
   signal rx_buf: std_logic_vector (7 downto 0);
-  signal rx_full: std_logic;
-  signal rx_read: std_logic := '0';
+  signal rx_data_valid: std_logic := '0';
 begin
 
   (led0_o, led1_o, led2_o, led3_o, led4_o, led5_o, led6_o, led7_o) <= rx_buf;
@@ -45,19 +44,17 @@ begin
       clk_div_i => uart_div,
       tx_data_i => tx_buf,
       tx_start_i => tx_start,
-      tx_ready_o => tx_ready,
+      tx_busy_o => tx_busy,
       tx_o => ftdi_tx_o,
       rx_data_o => rx_buf,
-      rx_read_i => rx_read,
-      rx_full_o => rx_full,
+      rx_data_valid_o => rx_data_valid,
       rx_i => ftdi_rx_i
       );
 
   process(clk_i)
   begin
     if rising_edge(clk_i) then
-      if rx_full = '1' then
-        rx_read <= '1';
+      if rx_data_valid = '1' then
         -- Invert character casing (only a-z or A-Z)
         if (unsigned(rx_buf) >= x"41" and unsigned(rx_buf) <= x"5A") or
           (unsigned(rx_buf) >= x"61" and unsigned(rx_buf) <= x"7A") then
@@ -68,7 +65,6 @@ begin
         tx_start <= '1';
       else
         tx_start <= '0';
-        rx_read <= '0';
       end if;
     end if;
   end process;

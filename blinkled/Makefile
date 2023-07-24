@@ -1,6 +1,6 @@
 TOP_LEVEL_ENT_SYNTH  = blinkled
 TOP_LEVEL_ENT_SIMU   = blinkled_tb
-SIMU_VCD_FILE        = blinkled_tb.vcd
+SIMU_GHW_FILE        = blinkled_tb.ghw
 SRC_DIR              = ./src/
 TOP_LEVEL_FILE_SYNTH = $(SRC_DIR)/blinkled.vhd
 TOP_LEVEL_FILE_SIMU  = $(SRC_DIR)/blinkled_tb.vhd
@@ -36,10 +36,10 @@ $(TOP_LEVEL_ENT_SIMU).o: $(TOP_LEVEL_FILE_SIMU) $(TOP_LEVEL_ENT_SYNTH).o
 $(TOP_LEVEL_ENT_SIMU): $(TOP_LEVEL_ENT_SIMU).o
 	ghdl -e $(GHDL_FLAGS) $@
 
-$(SIMU_VCD_FILE): $(TOP_LEVEL_ENT_SIMU)
-	./$(TOP_LEVEL_ENT_SIMU) --vcd=$@
+$(SIMU_GHW_FILE): $(TOP_LEVEL_ENT_SIMU)
+	./$(TOP_LEVEL_ENT_SIMU) --wave=$@
 
-simu: $(SIMU_VCD_FILE)
+simu: $(SIMU_GHW_FILE)
 
 clean:
-	rm -f *.o $(TOP_LEVEL_ENT_SYNTH).json $(TOP_LEVEL_ENT_SYNTH).asc $(TOP_LEVEL_ENT_SYNTH).bin $(SIMU_VCD_FILE) $(TOP_LEVEL_ENT_SIMU) *.cf
+	rm -f *.o $(TOP_LEVEL_ENT_SYNTH).json $(TOP_LEVEL_ENT_SYNTH).asc $(TOP_LEVEL_ENT_SYNTH).bin $(SIMU_GHW_FILE) $(TOP_LEVEL_ENT_SIMU) *.cf

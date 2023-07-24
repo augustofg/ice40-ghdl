@@ -1,6 +1,6 @@
 TOP_LEVEL_ENT_SYNTH  = uart_top
 TOP_LEVEL_ENT_SIMU   = uart_tb
-SIMU_VCD_FILE        = uart_tb.vcd
+SIMU_GHW_FILE        = uart_tb.ghw
 SRC_DIR              = ./src/
 TOP_LEVEL_FILE_SYNTH = $(SRC_DIR)/uart_demo.vhd
 TOP_LEVEL_FILE_SIMU  = $(SRC_DIR)/uart_tb.vhd
@@ -27,8 +27,10 @@ $(TOP_LEVEL_ENT_SYNTH).asc: $(SRC_DIR)/pinmap.pcf $(TOP_LEVEL_ENT_SYNTH).json $(
 $(TOP_LEVEL_ENT_SYNTH).json: $(TOP_LEVEL_ENT_SYNTH).o uart.o
 	yosys -m ghdl -p 'ghdl $(GHDL_FLAGS) $(TOP_LEVEL_ENT_SYNTH); synth_ice40 -json $(@)'
 
-simu: uart_tb
-	./uart_tb --vcd=uart_tb.vcd
+$(SIMU_GHW_FILE): $(TOP_LEVEL_ENT_SIMU)
+	./$(TOP_LEVEL_ENT_SIMU) --wave=$@
+
+simu: $(SIMU_GHW_FILE)
 
 $(TOP_LEVEL_ENT_SIMU): $(TOP_LEVEL_ENT_SIMU).o
 	ghdl -e $(GHDL_FLAGS) $@
@@ -43,4 +45,4 @@ uart.o: $(SRC_DIR)/uart.vhd
 	ghdl -a $(GHDL_FLAGS) $<
 
 clean:
-	rm -f *.o $(TOP_LEVEL_ENT_SYNTH).json $(TOP_LEVEL_ENT_SYNTH).asc $(TOP_LEVEL_ENT_SYNTH).bin $(SIMU_VCD_FILE) $(TOP_LEVEL_ENT_SIMU) *.cf
+	rm -f *.o $(TOP_LEVEL_ENT_SYNTH).json $(TOP_LEVEL_ENT_SYNTH).asc $(TOP_LEVEL_ENT_SYNTH).bin $(SIMU_GHW_FILE) $(TOP_LEVEL_ENT_SIMU) *.cf
